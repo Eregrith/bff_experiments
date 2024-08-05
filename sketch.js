@@ -42,8 +42,9 @@ let img = 0;
 let range = 2;
 let radio_display;
 let checkbox_highlight;
-let mutation_amount = 10;
+let mutation_amount = 0;
 let heavy_mutation_rate = 0.1;
+let max_program_steps = 20;
 
 function setup() {
   for (let y = 0; y < h; y++) {
@@ -112,6 +113,41 @@ function programAt(x, y) {
   return p;
 }
 
+function debug_tape(i, tape, head0, head1, ip) {
+  console.log("Step: ", i);
+  let tapeString = "";
+  let css = [];
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < (tape.length / 8); x++) {
+      let token = tape[y * (tape.length / 8) + x];
+      let thisCss = "";
+      if (head0 == y * 16 + x) {
+        thisCss += "background-color: lightblue;";
+      } 
+      if (head1 == y * 16 + x) {
+        thisCss += "color: red;";
+      }
+      if (ip == y * 16 + x) {
+        thisCss += "text-decoration: underline;";
+      }
+      tapeString += "%c%s%c";
+      if (thisCss == "")
+        css.push("background-color: inherit;color:inherit;text-decoration: inherit");
+      else 
+        css.push(thisCss);
+      if ("<>{},.-+[]".indexOf(char(token.c)) == -1) {
+        css.push("-");
+      } else {
+        css.push(char(token.c));
+      }
+      css.push("background-color: inherit;color:inherit;text-decoration: inherit");
+    }
+    tapeString += "\n";
+  }
+  console.log(tapeString, ...css);
+  console.log("");
+}
+
 function exec_and_split(progA, progB) {
   progA.taken = true;
   progB.taken = true;
@@ -119,8 +155,9 @@ function exec_and_split(progA, progB) {
   let head0 = 0;
   let head1 = 0;
   let ip = 0;
-  for (let i = 0; i < pow(8, 2) * 20; i++) {
+  for (let i = 0; i < pow(8, 2) * max_program_steps; i++) {
     let c = char(tape[ip].c);
+    //debug_tape(i, tape, head0, head1, ip);
     if ("<>{}-+.,[]".indexOf(c) == -1) {
       ip = (ip + 1) % tape.length;
       continue;
@@ -162,6 +199,8 @@ function exec_and_split(progA, progB) {
 
   progA.contents = tape.slice(0, tape.length / 2);
   progB.contents = tape.slice(tape.length / 2, tape.length);
+  //debug_tape('end A', progA.contents, 0,0,0);
+  //debug_tape('end B', progB.contents, 0,0,0);
 }
 
 let loop = 0;
